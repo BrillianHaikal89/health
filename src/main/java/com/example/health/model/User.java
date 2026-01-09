@@ -12,7 +12,6 @@ public class User {
     private String password;
     private String role; 
 
-    // Constructors
     public User() {
     }
 
@@ -22,7 +21,6 @@ public class User {
         this.role = role;
     }
 
-    // Getters and Setters
     public String getId() {
         return id;
     }

@@ -1,8 +1,9 @@
 package com.example.health.model;
 
+import java.time.LocalDate;
+
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
-import java.time.LocalDate;
 
 @Document(collection = "patients")
 public class Patient {
@@ -16,7 +17,6 @@ public class Patient {
     private LocalDate lastVisit;
     private String doctorNotes;
 
-    // Constructors
     public Patient() {}
 
     public Patient(String name, int age, String gender, String medicalHistory, 
@@ -29,7 +29,6 @@ public class Patient {
         this.lastVisit = lastVisit;
     }
 
-    // Getters and Setters
     public String getId() { return id; }
     public void setId(String id) { this.id = id; }
     
