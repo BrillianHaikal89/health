@@ -41,25 +41,6 @@
                         </a>
                     </div>
                 </div>
-                
-                <div class="card mt-4">
-                    <div class="card-header bg-success text-white">
-                        <i class="bi bi-info-circle"></i> Info Sistem
-                    </div>
-                    <div class="card-body">
-                        <p class="card-text">
-                            <small>
-                                Sistem manajemen kesehatan dengan:
-                                <ul class="mb-0">
-                                    <li>Login otentikasi</li>
-                                    <li>CRUD pasien</li>
-                                    <li>Chatbot AI kesehatan</li>
-                                    <li>Database MongoDB</li>
-                                </ul>
-                            </small>
-                        </p>
-                    </div>
-                </div>
             </div>
             
             <!-- Main Content -->
@@ -81,7 +62,7 @@
                                     <i class="bi bi-people"></i> Total Pasien
                                 </h5>
                                 <p class="card-text display-6" th:text="${totalPatients}">0</p>
-                                <a href="/patients" class="text-white">Lihat semua →</a>
+                                <a href="#patientSection" class="text-white">Lihat semua →</a>
                             </div>
                         </div>
                     </div>
@@ -104,6 +85,53 @@
                                 <p class="card-text">Siap membantu</p>
                                 <a href="#chatbotSection" class="text-white">Coba sekarang →</a>
                             </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Patient Management Section -->
+                <div class="card mb-4" id="patientSection">
+                    <div class="card-header bg-primary text-white">
+                        <i class="bi bi-people"></i> Manajemen Pasien (CRUD)
+                    </div>
+                    <div class="card-body">
+                        <!-- Add Patient Button -->
+                        <button class="btn btn-success mb-3" data-bs-toggle="modal" data-bs-target="#addPatientModal">
+                            <i class="bi bi-plus-circle"></i> Tambah Pasien Baru
+                        </button>
+                        
+                        <!-- Search Bar -->
+                        <div class="input-group mb-3">
+                            <input type="text" class="form-control" id="searchPatient" 
+                                   placeholder="Cari nama pasien...">
+                            <button class="btn btn-outline-primary" onclick="searchPatients()">
+                                <i class="bi bi-search"></i> Cari
+                            </button>
+                        </div>
+                        
+                        <!-- Patients Table -->
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Nama</th>
+                                        <th>Usia</th>
+                                        <th>Gender</th>
+                                        <th>Kondisi</th>
+                                        <th>Terakhir Kunjungan</th>
+                                        <th>Aksi</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="patientTableBody">
+                                    <!-- Data akan diisi oleh JavaScript -->
+                                    <tr>
+                                        <td colspan="6" class="text-center">
+                                            <div class="spinner-border spinner-border-sm" role="status"></div>
+                                            Memuat data...
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
                         </div>
                     </div>
                 </div>
@@ -145,7 +173,373 @@
         </div>
     </div>
     
+    <!-- Add Patient Modal -->
+    <div class="modal fade" id="addPatientModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Tambah Pasien Baru</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <form id="addPatientForm" onsubmit="return addPatient(event)">
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label class="form-label">Nama Pasien</label>
+                            <input type="text" class="form-control" id="patientName" required>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Usia</label>
+                                <input type="number" class="form-control" id="patientAge" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Gender</label>
+                                <select class="form-control" id="patientGender" required>
+                                    <option value="">Pilih Gender</option>
+                                    <option value="Laki-laki">Laki-laki</option>
+                                    <option value="Perempuan">Perempuan</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Riwayat Medis</label>
+                            <textarea class="form-control" id="patientMedicalHistory" rows="2"></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Kondisi Saat Ini</label>
+                            <input type="text" class="form-control" id="patientCondition">
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                        <button type="submit" class="btn btn-primary">
+                            <span id="addPatientSpinner" class="spinner-border spinner-border-sm d-none" role="status"></span>
+                            Simpan Pasien
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Edit Patient Modal -->
+    <div class="modal fade" id="editPatientModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Edit Pasien</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <form id="editPatientForm" onsubmit="return updatePatient(event)">
+                    <input type="hidden" id="editPatientId">
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label class="form-label">Nama Pasien</label>
+                            <input type="text" class="form-control" id="editPatientName" required>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Usia</label>
+                                <input type="number" class="form-control" id="editPatientAge" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Gender</label>
+                                <select class="form-control" id="editPatientGender" required>
+                                    <option value="Laki-laki">Laki-laki</option>
+                                    <option value="Perempuan">Perempuan</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Riwayat Medis</label>
+                            <textarea class="form-control" id="editPatientMedicalHistory" rows="2"></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Kondisi Saat Ini</label>
+                            <input type="text" class="form-control" id="editPatientCondition">
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                        <button type="submit" class="btn btn-primary">
+                            <span id="editPatientSpinner" class="spinner-border spinner-border-sm d-none" role="status"></span>
+                            Simpan Perubahan
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
+        // Load patients when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            loadPatients();
+        });
+        
+        function loadPatients() {
+            fetch('/api/patients')
+                .then(response => response.json())
+                .then(patients => {
+                    const tbody = document.getElementById('patientTableBody');
+                    tbody.innerHTML = '';
+                    
+                    if (patients.length === 0) {
+                        tbody.innerHTML = `
+                            <tr>
+                                <td colspan="6" class="text-center text-muted">
+                                    <i class="bi bi-inbox"></i> Belum ada data pasien
+                                </td>
+                            </tr>
+                        `;
+                        return;
+                    }
+                    
+                    patients.forEach(patient => {
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td>${patient.name}</td>
+                            <td>${patient.age}</td>
+                            <td>${patient.gender}</td>
+                            <td>
+                                <span class="badge ${patient.currentCondition ? 'bg-warning' : 'bg-secondary'}">
+                                    ${patient.currentCondition || 'Tidak ada'}
+                                </span>
+                            </td>
+                            <td>${new Date(patient.lastVisit).toLocaleDateString('id-ID')}</td>
+                            <td>
+                                <button class="btn btn-sm btn-info" onclick="editPatient('${patient.id}')">
+                                    <i class="bi bi-pencil"></i>
+                                </button>
+                                <button class="btn btn-sm btn-danger" onclick="deletePatient('${patient.id}')">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </td>
+                        `;
+                        tbody.appendChild(row);
+                    });
+                })
+                .catch(error => {
+                    console.error('Error loading patients:', error);
+                    document.getElementById('patientTableBody').innerHTML = `
+                        <tr>
+                            <td colspan="6" class="text-center text-danger">
+                                <i class="bi bi-exclamation-triangle"></i> Gagal memuat data
+                            </td>
+                        </tr>
+                    `;
+                });
+        }
+        
+        function searchPatients() {
+            const searchTerm = document.getElementById('searchPatient').value;
+            fetch(`/api/patients/search?name=${encodeURIComponent(searchTerm)}`)
+                .then(response => response.json())
+                .then(patients => {
+                    const tbody = document.getElementById('patientTableBody');
+                    tbody.innerHTML = '';
+                    
+                    if (patients.length === 0) {
+                        tbody.innerHTML = `
+                            <tr>
+                                <td colspan="6" class="text-center text-muted">
+                                    <i class="bi bi-search"></i> Tidak ditemukan
+                                </td>
+                            </tr>
+                        `;
+                        return;
+                    }
+                    
+                    patients.forEach(patient => {
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td>${patient.name}</td>
+                            <td>${patient.age}</td>
+                            <td>${patient.gender}</td>
+                            <td>
+                                <span class="badge ${patient.currentCondition ? 'bg-warning' : 'bg-secondary'}">
+                                    ${patient.currentCondition || 'Tidak ada'}
+                                </span>
+                            </td>
+                            <td>${new Date(patient.lastVisit).toLocaleDateString('id-ID')}</td>
+                            <td>
+                                <button class="btn btn-sm btn-info" onclick="editPatient('${patient.id}')">
+                                    <i class="bi bi-pencil"></i>
+                                </button>
+                                <button class="btn btn-sm btn-danger" onclick="deletePatient('${patient.id}')">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </td>
+                        `;
+                        tbody.appendChild(row);
+                    });
+                });
+        }
+        
+        function addPatient(event) {
+            event.preventDefault();
+            
+            const patientData = {
+                name: document.getElementById('patientName').value,
+                age: parseInt(document.getElementById('patientAge').value),
+                gender: document.getElementById('patientGender').value,
+                medicalHistory: document.getElementById('patientMedicalHistory').value,
+                currentCondition: document.getElementById('patientCondition').value
+            };
+            
+            const spinner = document.getElementById('addPatientSpinner');
+            const submitBtn = event.target.querySelector('button[type="submit"]');
+            
+            spinner.classList.remove('d-none');
+            submitBtn.disabled = true;
+            
+            fetch('/api/patients', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(patientData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                spinner.classList.add('d-none');
+                submitBtn.disabled = false;
+                
+                if (data.success) {
+                    // Close modal
+                    const modal = bootstrap.Modal.getInstance(document.getElementById('addPatientModal'));
+                    modal.hide();
+                    
+                    // Reset form
+                    document.getElementById('addPatientForm').reset();
+                    
+                    // Reload patients
+                    loadPatients();
+                    
+                    // Show success message
+                    showAlert('Pasien berhasil ditambahkan!', 'success');
+                } else {
+                    showAlert('Gagal menambahkan pasien: ' + data.message, 'danger');
+                }
+            })
+            .catch(error => {
+                spinner.classList.add('d-none');
+                submitBtn.disabled = false;
+                showAlert('Error: ' + error.message, 'danger');
+            });
+            
+            return false;
+        }
+        
+        function editPatient(id) {
+            fetch(`/api/patients/${id}`)
+                .then(response => response.json())
+                .then(patient => {
+                    document.getElementById('editPatientId').value = patient.id;
+                    document.getElementById('editPatientName').value = patient.name;
+                    document.getElementById('editPatientAge').value = patient.age;
+                    document.getElementById('editPatientGender').value = patient.gender;
+                    document.getElementById('editPatientMedicalHistory').value = patient.medicalHistory || '';
+                    document.getElementById('editPatientCondition').value = patient.currentCondition || '';
+                    
+                    const modal = new bootstrap.Modal(document.getElementById('editPatientModal'));
+                    modal.show();
+                });
+        }
+        
+        function updatePatient(event) {
+            event.preventDefault();
+            
+            const id = document.getElementById('editPatientId').value;
+            const patientData = {
+                name: document.getElementById('editPatientName').value,
+                age: parseInt(document.getElementById('editPatientAge').value),
+                gender: document.getElementById('editPatientGender').value,
+                medicalHistory: document.getElementById('editPatientMedicalHistory').value,
+                currentCondition: document.getElementById('editPatientCondition').value
+            };
+            
+            const spinner = document.getElementById('editPatientSpinner');
+            const submitBtn = event.target.querySelector('button[type="submit"]');
+            
+            spinner.classList.remove('d-none');
+            submitBtn.disabled = true;
+            
+            fetch(`/api/patients/${id}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(patientData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                spinner.classList.add('d-none');
+                submitBtn.disabled = false;
+                
+                if (data.success) {
+                    // Close modal
+                    const modal = bootstrap.Modal.getInstance(document.getElementById('editPatientModal'));
+                    modal.hide();
+                    
+                    // Reload patients
+                    loadPatients();
+                    
+                    // Show success message
+                    showAlert('Pasien berhasil diperbarui!', 'success');
+                } else {
+                    showAlert('Gagal memperbarui pasien: ' + data.message, 'danger');
+                }
+            })
+            .catch(error => {
+                spinner.classList.add('d-none');
+                submitBtn.disabled = false;
+                showAlert('Error: ' + error.message, 'danger');
+            });
+            
+            return false;
+        }
+        
+        function deletePatient(id) {
+            if (confirm('Apakah Anda yakin ingin menghapus pasien ini?')) {
+                fetch(`/api/patients/${id}`, {
+                    method: 'DELETE'
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        loadPatients();
+                        showAlert('Pasien berhasil dihapus!', 'success');
+                    } else {
+                        showAlert('Gagal menghapus pasien: ' + data.message, 'danger');
+                    }
+                })
+                .catch(error => {
+                    showAlert('Error: ' + error.message, 'danger');
+                });
+            }
+        }
+        
+        function showAlert(message, type) {
+            const alertDiv = document.createElement('div');
+            alertDiv.className = `alert alert-${type} alert-dismissible fade show position-fixed top-0 end-0 m-3`;
+            alertDiv.style.zIndex = '1050';
+            alertDiv.innerHTML = `
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+            
+            document.body.appendChild(alertDiv);
+            
+            setTimeout(() => {
+                if (alertDiv.parentNode) {
+                    alertDiv.remove();
+                }
+            }, 5000);
+        }
+        
+        // Existing chatbot function
         function askQuestion() {
             const question = document.getElementById('questionInput').value;
             if (!question.trim()) {

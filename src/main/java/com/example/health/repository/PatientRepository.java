@@ -5,5 +5,8 @@ import org.springframework.data.mongodb.repository.MongoRepository;
 import java.util.List;
 
 public interface PatientRepository extends MongoRepository<Patient, String> {
+
     List<Patient> findByNameContainingIgnoreCase(String name);
+
+    List<Patient> findByLastVisit(String date); // Add this if needed
 }
